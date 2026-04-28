@@ -106,8 +106,6 @@ export async function POST(req: NextRequest) {
         high_24h: Math.max(coin.high_24h, update.new_price),
         low_24h: Math.min(coin.low_24h, update.new_price),
         sentiment: newSentiment,
-        buy_volume_1h: 0,
-        sell_volume_1h: 0,
         updated_at: now.toISOString(),
       })
 

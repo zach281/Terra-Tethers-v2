@@ -1,11 +1,29 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 
-export const revalidate = 5
+export const revalidate = 0
+
+const PRICE_UPDATE_INTERVAL_MS = 10_000
 
 export async function GET() {
   try {
     const supabase = await createServiceClient()
+
+    // Lazily trigger price engine if prices are stale
+    const { data: state } = await supabase
+      .from('price_engine_state')
+      .select('last_run')
+      .single()
+
+    const lastUpdated = state?.last_run ? new Date(state.last_run).getTime() : 0
+    if (Date.now() - lastUpdated > PRICE_UPDATE_INTERVAL_MS) {
+      // Fire-and-forget: trigger price engine in background
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/price-engine`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${process.env.CRON_SECRET ?? ''}` },
+      }).catch(() => {})
+    }
+
     const { data: coins, error } = await supabase
       .from('coins')
       .select('*')
