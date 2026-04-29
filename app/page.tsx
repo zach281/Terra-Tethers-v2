@@ -35,7 +35,6 @@ async function getStats() {
 
 export default async function LandingPage() {
   const [coins, stats] = await Promise.all([getCoins(), getStats()])
-
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
       {/* Nav */}
@@ -81,25 +80,20 @@ export default async function LandingPage() {
       <section className="relative pt-36 pb-20 px-4 grid-bg overflow-hidden">
         <div className="absolute top-20 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-40 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
-
         <div className="max-w-5xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 text-xs text-zinc-400 mb-6">
             <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
             Beta Launch — {(stats.waitlistCount + 1247).toLocaleString()}+ on the waitlist
           </div>
-
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-black tracking-tight mb-6 leading-none">
-            Trade the
-            <br />
+            Trade the<br />
             <span className="gradient-text">World Stage</span>
           </h1>
-
           <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             Buy and sell <strong className="text-white">country coins</strong> tied to real geopolitical events.
             USA vs. Iran. Oil shocks. Airstrikes. Ceasefires.{' '}
             <strong className="text-white">$10,000 fake money. Real strategy.</strong>
           </p>
-
           <div className="flex flex-col sm:flex-row gap-3 justify-center mb-16">
             <Link href="/signup" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-black font-bold text-lg rounded-xl hover:bg-zinc-100 transition-all shadow-xl shadow-white/10">
               Start Trading Free <ArrowRight className="w-5 h-5" />
@@ -108,7 +102,6 @@ export default async function LandingPage() {
               <BarChart3 className="w-5 h-5" /> View Live Market
             </Link>
           </div>
-
           <div className="grid grid-cols-3 gap-4 max-w-xl mx-auto">
             {[
               { label: 'Active Traders', value: (stats.userCount + 3241).toLocaleString() },
