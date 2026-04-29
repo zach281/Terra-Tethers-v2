@@ -28,7 +28,7 @@ function SignupForm() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `https://terra-tethers-v2.vercel.app/auth/callback`,
         data: { referral_code: ref ?? null },
       },
     })
