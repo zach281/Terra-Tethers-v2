@@ -37,7 +37,6 @@ export default async function LandingPage() {
   const [coins, stats] = await Promise.all([getCoins(), getStats()])
   return (
     <div className="min-h-screen bg-black text-white overflow-x-hidden">
-      {/* Nav */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800/60 bg-black/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2 font-bold text-lg">
@@ -55,7 +54,6 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      {/* Ticker */}
       {coins.length > 0 && (
         <div className="fixed top-14 left-0 right-0 z-40 overflow-hidden border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur-sm py-1.5">
           <div className="flex gap-8 whitespace-nowrap px-4">
@@ -76,7 +74,6 @@ export default async function LandingPage() {
         </div>
       )}
 
-      {/* Hero */}
       <section className="relative pt-36 pb-20 px-4 grid-bg overflow-hidden">
         <div className="absolute top-20 left-1/4 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-40 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -117,7 +114,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Live market preview */}
       {coins.length > 0 && (
         <section className="py-16 px-4 bg-zinc-950/50">
           <div className="max-w-5xl mx-auto">
@@ -152,7 +148,6 @@ export default async function LandingPage() {
         </section>
       )}
 
-      {/* How it works */}
       <section className="py-20 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -177,7 +172,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Features */}
       <section className="py-16 px-4 bg-zinc-950/50">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
@@ -206,7 +200,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="py-24 px-4 bg-gradient-to-b from-zinc-950 to-black">
         <div className="max-w-lg mx-auto text-center">
           <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-3 py-1 text-xs text-emerald-400 mb-6">
@@ -225,7 +218,6 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer className="border-t border-zinc-800 py-8 px-4">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-zinc-600">
           <div className="flex items-center gap-2">
