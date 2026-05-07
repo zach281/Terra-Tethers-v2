@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { createServiceClient } from '@/lib/supabase/server'
 import { NewsEvent } from '@/lib/types'
 import { timeAgo, cn } from '@/lib/utils'
