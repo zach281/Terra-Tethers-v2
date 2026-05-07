@@ -10,7 +10,6 @@ export async function GET() {
     const { data: coins, error } = await supabase
       .from('coins')
       .select('*')
-      .eq('is_active', true)
       .order('id')
 
     if (error) throw error
