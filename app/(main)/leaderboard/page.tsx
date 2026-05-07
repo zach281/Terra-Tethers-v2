@@ -4,14 +4,58 @@ import { LeaderboardEntry } from '@/lib/types'
 import { formatCurrency, formatPct, getPnlBg, cn } from '@/lib/utils'
 import React from 'react'
 import { Trophy, Crown, Medal } from 'lucide-react'
-import Link from 'next/link'
 
-async function getLeaderboard() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'}/api/leaderboard`, {
-    next: { revalidate: 30 }
-  })
-  const data = await res.json()
-  return (data.leaderboard ?? []) as LeaderboardEntry[]
+async function getLeaderboard(): Promise<LeaderboardEntry[]> {
+  try {
+    const supabase = await createServiceClient()
+
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, avatar_url, balance, total_trades')
+      .eq('is_public', true)
+      .order('balance', { ascending: false })
+      .limit(100)
+
+    if (!profiles || profiles.length === 0) return []
+
+    const { data: holdings } = await supabase
+      .from('holdings')
+      .select('user_id, quantity, total_invested, coin:coins(current_price)')
+      .in('user_id', profiles.map((p: any) => p.id))
+      .gt('quantity', 0)
+
+    const holdingsMap: Record<string, number> = {}
+    for (const h of holdings ?? []) {
+      const coinData = (h.coin as unknown) as { current_price: number } | null
+      const val = h.quantity * (coinData?.current_price ?? 0)
+      holdingsMap[h.user_id] = (holdingsMap[h.user_id] ?? 0) + val
+    }
+
+    const leaderboard = profiles
+      .map((p: any) => {
+        const holdingsValue = holdingsMap[p.id] ?? 0
+        const totalValue = p.balance + holdingsValue
+        const pnl = totalValue - 10000
+        const pnl_pct = (pnl / 10000) * 100
+        return {
+          user_id: p.id,
+          username: p.username,
+          display_name: p.display_name,
+          avatar_url: p.avatar_url,
+          portfolio_value: totalValue,
+          balance: p.balance,
+          pnl,
+          pnl_pct,
+          total_trades: p.total_trades,
+        }
+      })
+      .sort((a: any, b: any) => b.portfolio_value - a.portfolio_value)
+      .map((entry: any, i: number) => ({ ...entry, rank: i + 1 }))
+
+    return leaderboard as LeaderboardEntry[]
+  } catch {
+    return []
+  }
 }
 
 async function getCurrentUserId() {
@@ -110,14 +154,11 @@ export default async function LeaderboardPage() {
                   isMe ? 'bg-white/5' : 'hover:bg-white/2'
                 )}
               >
-                {/* Rank */}
                 <div className="flex items-center justify-center">
                   {RANK_ICONS[entry.rank] ?? (
                     <span className="text-sm font-bold text-zinc-500">#{entry.rank}</span>
                   )}
                 </div>
-
-                {/* Trader */}
                 <div className="flex items-center gap-2 min-w-0">
                   <div className="w-8 h-8 flex-shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-pink-500 flex items-center justify-center text-sm font-bold text-white">
                     {(entry.display_name || entry.username)[0].toUpperCase()}
@@ -130,18 +171,12 @@ export default async function LeaderboardPage() {
                     <div className="text-xs text-zinc-600">@{entry.username}</div>
                   </div>
                 </div>
-
-                {/* Trades */}
                 <div className="text-sm text-zinc-500 text-right hidden sm:block">
                   {entry.total_trades}
                 </div>
-
-                {/* Return */}
                 <div className={cn('text-sm font-bold text-right', entry.pnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                   {entry.pnl >= 0 ? '+' : ''}{formatPct(entry.pnl_pct)}
                 </div>
-
-                {/* Value */}
                 <div className="text-sm font-bold text-white text-right">
                   {formatCurrency(entry.portfolio_value)}
                 </div>
