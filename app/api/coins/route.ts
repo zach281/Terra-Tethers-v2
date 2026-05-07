@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-export const revalidate = 0
+export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
@@ -26,7 +26,9 @@ export async function GET() {
         : 0,
     }))
 
-    return NextResponse.json({ coins: enriched })
+    return NextResponse.json({ coins: enriched }, {
+      headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' },
+    })
   } catch (err) {
     console.error('[GET /api/coins]', err)
     return NextResponse.json({ error: 'Failed to fetch coins' }, { status: 500 })
