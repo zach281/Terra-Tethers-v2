@@ -8,17 +8,21 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   if (!user) redirect('/login')
 
   let profile = null
+
+  // Use the user's own session to read their profile (works with RLS)
   try {
-    const service = await createServiceClient()
-    const { data } = await service
+    const { data } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single()
     profile = data
+  } catch {}
 
-    // Auto-create profile if the DB trigger didn't run
-    if (!profile) {
+  // If no profile exists, auto-create one using service role (bypasses RLS for insert)
+  if (!profile) {
+    try {
+      const service = await createServiceClient()
       const username = (user.email?.split('@')[0] ?? 'trader')
         .replace(/[^a-z0-9]/gi, '').toLowerCase().slice(0, 20) || 'trader'
       const { data: created } = await service
@@ -27,9 +31,13 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         .select()
         .single()
       profile = created
-    }
+    } catch {}
+  }
 
-    if (profile) {
+  // Update login streak using service role
+  if (profile) {
+    try {
+      const service = await createServiceClient()
       const today = new Date().toISOString().split('T')[0]
       if (profile.last_login_date !== today) {
         const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
@@ -39,8 +47,8 @@ export default async function MainLayout({ children }: { children: React.ReactNo
           .update({ last_login_date: today, login_streak: newStreak })
           .eq('id', user.id)
       }
-    }
-  } catch {}
+    } catch {}
+  }
 
   return (
     <div className="min-h-screen bg-black">
