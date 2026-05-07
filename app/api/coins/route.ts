@@ -3,24 +3,9 @@ import { createClient } from '@/lib/supabase/server'
 
 export const revalidate = 0
 
-const PRICE_UPDATE_INTERVAL_MS = 10_000
-
 export async function GET() {
   try {
     const supabase = await createClient()
-
-    const { data: state } = await supabase
-      .from('price_engine_state')
-      .select('last_run')
-      .single()
-
-    const lastUpdated = state?.last_run ? new Date(state.last_run).getTime() : 0
-    if (Date.now() - lastUpdated > PRICE_UPDATE_INTERVAL_MS) {
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/api/price-engine`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${process.env.CRON_SECRET ?? ''}` },
-      }).catch(() => {})
-    }
 
     const { data: coins, error } = await supabase
       .from('coins')
