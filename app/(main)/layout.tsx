@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createServiceClient } from '@/lib/supabase/server'
 import { Navbar } from '@/components/layout/navbar'
 
 export default async function MainLayout({ children }: { children: React.ReactNode }) {
@@ -8,8 +7,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const service = await createServiceClient()
-  const { data: profile } = await service
+  const { data: profile } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
@@ -20,7 +18,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     if (profile.last_login_date !== today) {
       const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]
       const newStreak = profile.last_login_date === yesterday ? (profile.login_streak ?? 0) + 1 : 1
-      await service
+      await supabase
         .from('profiles')
         .update({ last_login_date: today, login_streak: newStreak })
         .eq('id', user.id)
