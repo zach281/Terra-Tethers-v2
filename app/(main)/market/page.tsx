@@ -21,20 +21,28 @@ export default function MarketPage() {
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
   const [search, setSearch] = useState('')
-  const [view, setView] = useState<'grid' | 'list'>('grid')
 
   const fetchData = useCallback(async () => {
-    const [coinsRes, portfolioRes, tradesRes] = await Promise.all([
-      fetch('/api/coins').then(r => r.json()),
-      fetch('/api/portfolio').then(r => r.json()),
-      fetch('/api/trades').then(r => r.json()),
-    ])
-    if (coinsRes.coins) setCoins(coinsRes.coins)
-    if (portfolioRes.stats) setBalance(portfolioRes.stats.cash_balance)
-    if (portfolioRes.holdings) setHoldings(portfolioRes.holdings)
-    if (tradesRes.trades) setRecentTrades(tradesRes.trades.slice(0, 20))
-    setLastUpdated(new Date())
-    setLoading(false)
+    try {
+      const [coinsResult, portfolioResult, tradesResult] = await Promise.allSettled([
+        fetch('/api/coins').then(r => r.json()),
+        fetch('/api/portfolio').then(r => r.json()),
+        fetch('/api/trades').then(r => r.json()),
+      ])
+      if (coinsResult.status === 'fulfilled' && coinsResult.value.coins) {
+        setCoins(coinsResult.value.coins)
+      }
+      if (portfolioResult.status === 'fulfilled') {
+        if (portfolioResult.value.stats) setBalance(portfolioResult.value.stats.cash_balance)
+        if (portfolioResult.value.holdings) setHoldings(portfolioResult.value.holdings)
+      }
+      if (tradesResult.status === 'fulfilled' && tradesResult.value.trades) {
+        setRecentTrades(tradesResult.value.trades.slice(0, 20))
+      }
+      setLastUpdated(new Date())
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   const fetchCoinHistory = useCallback(async (coinId: string) => {
@@ -60,7 +68,6 @@ export default function MarketPage() {
   const handleTradeSuccess = (newBalance: number) => {
     setBalance(newBalance)
     fetchData()
-    // Check achievements
     fetch('/api/achievements', { method: 'POST' })
   }
 
@@ -155,16 +162,24 @@ export default function MarketPage() {
           </div>
 
           {/* Coin grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {filteredCoins.map(coin => (
-              <CoinCard
-                key={coin.id}
-                coin={coin}
-                onClick={handleCoinSelect}
-                isSelected={selectedCoin?.id === coin.id}
-              />
-            ))}
-          </div>
+          {filteredCoins.length === 0 ? (
+            <div className="text-center py-16 text-zinc-600">
+              <div className="text-4xl mb-3">🌍</div>
+              <div className="font-medium">No coins found</div>
+              {search && <div className="text-sm mt-1">Try clearing your search</div>}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {filteredCoins.map(coin => (
+                <CoinCard
+                  key={coin.id}
+                  coin={coin}
+                  onClick={handleCoinSelect}
+                  isSelected={selectedCoin?.id === coin.id}
+                />
+              ))}
+            </div>
+          )}
 
           {/* Price chart for selected coin */}
           <AnimatePresence>
@@ -212,7 +227,6 @@ export default function MarketPage() {
 
         {/* Right sidebar */}
         <div className="space-y-4">
-          {/* Trade panel */}
           <AnimatePresence mode="wait">
             {selectedCoin ? (
               <TradePanel
@@ -236,10 +250,7 @@ export default function MarketPage() {
             )}
           </AnimatePresence>
 
-          {/* Sentiment meter */}
           <SentimentMeter coins={coins} />
-
-          {/* Whale tracker */}
           <WhaleTracker trades={recentTrades} />
         </div>
       </div>
