@@ -39,6 +39,8 @@ function SignupForm() {
       // Try to sign in directly (for email confirmation disabled setups)
       const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
       if (!signInError) {
+        // Ensure profile exists (trigger may have failed due to RLS)
+        await fetch('/api/profile', { method: 'POST' })
         // Apply referral if present
         if (ref) {
           await fetch('/api/referrals', {

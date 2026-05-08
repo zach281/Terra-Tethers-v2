@@ -22,6 +22,52 @@ export async function GET() {
   }
 }
 
+export async function POST() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const service = createServiceClient()
+
+    const { data: existing } = await service
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (existing) return NextResponse.json({ profile: existing })
+
+    let baseUsername = (user.email ?? '').split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '')
+    if (baseUsername.length < 3) baseUsername = 'trader' + baseUsername
+
+    let finalUsername = baseUsername
+    let counter = 0
+    while (true) {
+      const { data: taken } = await service.from('profiles').select('id').eq('username', finalUsername).single()
+      if (!taken) break
+      counter++
+      finalUsername = baseUsername + counter
+    }
+
+    const { data: profile, error } = await service
+      .from('profiles')
+      .insert({ id: user.id, username: finalUsername, display_name: finalUsername })
+      .select()
+      .single()
+
+    if (error) {
+      console.error('[POST /api/profile]', error)
+      return NextResponse.json({ error: 'Failed to create profile' }, { status: 500 })
+    }
+
+    return NextResponse.json({ profile })
+  } catch (err) {
+    console.error('[POST /api/profile]', err)
+    return NextResponse.json({ error: 'Server error' }, { status: 500 })
+  }
+}
+
 export async function PATCH(req: NextRequest) {
   try {
     const supabase = await createClient()
